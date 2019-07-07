@@ -2,7 +2,8 @@
 <resources>
     <color name="colorPrimary">#453A94</color>
     <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#4F4657</color>
+    <color name="colorAccent">#A3BDED</color>
 
     <color name="black_overlay">#424242</color>
+    <color name="roundButton">#B2FBC8D4</color>
 </resources>

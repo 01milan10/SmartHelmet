@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.SEND_SMS;
 import static android.content.ContentValues.TAG;
 
@@ -115,9 +116,11 @@ public class Landing extends AppCompatActivity implements LocationListener {
             bluetoothSwitch.setChecked(true);
         }
 
-        final int permissionCheck = ContextCompat.checkSelfPermission(Landing.this, Manifest.permission.ACCESS_FINE_LOCATION);
-        if(!(permissionCheck == PackageManager.PERMISSION_GRANTED)){
-            ActivityCompat.requestPermissions(Landing.this,new String[]{ACCESS_FINE_LOCATION,SEND_SMS},RequestPermissionCode);
+        final int locationCheck = ContextCompat.checkSelfPermission(Landing.this, ACCESS_FINE_LOCATION);
+        final int callCheck = ContextCompat.checkSelfPermission(Landing.this, CALL_PHONE);
+        final int smsCheck = ContextCompat.checkSelfPermission(Landing.this, SEND_SMS);
+        if(!((locationCheck & callCheck &smsCheck) == PackageManager.PERMISSION_GRANTED)){
+            ActivityCompat.requestPermissions(Landing.this,new String[]{ACCESS_FINE_LOCATION,SEND_SMS,CALL_PHONE},RequestPermissionCode);
         }
 
 
@@ -155,7 +158,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
         connectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
                 if(!mBlueAdapter.isEnabled()){
                     Toast.makeText(Landing.this, "Turn On Your Bluetooth...", Toast.LENGTH_LONG).show();
                 }
@@ -238,9 +240,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
                             e.printStackTrace();
                         }
                     }
-                    else{
-                        Toast.makeText(Landing.this, "Please Pair to 'Smart Helmet'.", Toast.LENGTH_LONG).show();
-                    }
 
                 }
             }
@@ -303,6 +302,8 @@ public class Landing extends AppCompatActivity implements LocationListener {
         if(!phone.isEmpty()){
             SmsManager smsManager = SmsManager.getDefault();
             smsManager.sendTextMessage((String) sosNumber.getText(),null,message,null,null);
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse(phone));
             Toast.makeText(Landing.this, "Message Sent", Toast.LENGTH_SHORT).show();
         }
         else{
@@ -319,6 +320,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
                 if (grantResults.length>=0) {
                     boolean smsPermission =grantResults[0]==PackageManager.PERMISSION_GRANTED;
                     boolean locationPermission =grantResults[1]==PackageManager.PERMISSION_GRANTED;
+                    boolean callPermission = grantResults[2]==PackageManager.PERMISSION_GRANTED;
                 }
                 else{
                     Toast.makeText(Landing.this, "Request not granted!!", Toast.LENGTH_LONG).show();
