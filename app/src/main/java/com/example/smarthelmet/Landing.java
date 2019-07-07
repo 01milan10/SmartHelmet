@@ -19,6 +19,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -75,11 +76,11 @@ public class Landing extends AppCompatActivity implements LocationListener {
     String longitude, latitude;
     String namee, numberrr;
 
-    Button connectBtn, btnSOS, onOffBtn;
-    TextView deviceName, sosName, sosNumber, senseValue,currentLocation;
+    Button connectBtn, btnSOS;
+    TextView deviceName, sosName, sosNumber, senseValue;
     Switch bluetoothSwitch;
 
-    BluetoothAdapter mBlueAdapter;
+    BluetoothAdapter mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
 
     DatabaseHelper databaseHelper = new DatabaseHelper(this);
 
@@ -91,13 +92,10 @@ public class Landing extends AppCompatActivity implements LocationListener {
 
         btnSOS = (Button) findViewById(R.id.btnSOS);
         connectBtn = (Button) findViewById(R.id.connectBtn);
-//        onOffBtn = (Button) findViewById(R.id.onOffBtn);
         deviceName = (TextView) findViewById(R.id.deviceName);
-//        deviceAddress = (TextView) findViewById(R.id.deviceAddress);
         sosName = (TextView) findViewById(R.id.sosName);
         sosNumber = (TextView) findViewById(R.id.sosNumber);
         senseValue = (TextView) findViewById(R.id.senseValue);
-        currentLocation =(TextView)findViewById(R.id.currentLocation);
         bluetoothSwitch =(Switch) findViewById(R.id.bluetoothSwitch);
 
         Intent intent = new Intent(this,smartService.class);
@@ -110,19 +108,18 @@ public class Landing extends AppCompatActivity implements LocationListener {
             sosName.setText(namee);
             sosNumber.setText(numberrr);
         }
-
-
-        final int permissionCheck = ContextCompat.checkSelfPermission(Landing.this, ACCESS_FINE_LOCATION);
-        if(permissionCheck == PackageManager.PERMISSION_GRANTED){
-            Toast.makeText(Landing.this, "Request granted!!", Toast.LENGTH_LONG).show();
+        if (mBlueAdapter.isEnabled()){
+            bluetoothSwitch.setChecked(true);
         }
-        else {
+
+        final int permissionCheck = ContextCompat.checkSelfPermission(Landing.this, Manifest.permission.ACCESS_FINE_LOCATION);
+        if(!(permissionCheck == PackageManager.PERMISSION_GRANTED)){
             ActivityCompat.requestPermissions(Landing.this,new String[]{ACCESS_FINE_LOCATION,SEND_SMS},RequestPermissionCode);
         }
 
-        Criteria criteria = new Criteria();
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        provider = locationManager.getBestProvider(criteria, true);
+        provider = locationManager.getBestProvider(createFineCriteria(), true);
         locationManager.requestLocationUpdates(provider, 1000, 0,this);
 
 
@@ -139,7 +136,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
                     mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
                     mBlueAdapter.disable();
                     deviceName.setText("Waiting...");
-//                    deviceAddress.setText("Waiting...");
                 }
             }
         });
@@ -172,21 +168,17 @@ public class Landing extends AppCompatActivity implements LocationListener {
             }
         });
 
-//        onOffBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
-//                if (!mBlueAdapter.isEnabled()) {
-//                    Toast.makeText(Landing.this, "Turning On Bluetooth...", Toast.LENGTH_SHORT).show();
-//                    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//                    startActivityForResult(intent, REQUEST_ENABLE_BT);
-//                } else {
-//                    mBlueAdapter.disable();
-//                    deviceName.setText("Waiting...");
-////                    deviceAddress.setText("Waiting...");
-//                }
-//            }
-//        });
+    }
+    public static Criteria createFineCriteria(){
+
+        Criteria c = new Criteria();
+        c.setAccuracy(Criteria.ACCURACY_FINE);
+        c.setAltitudeRequired(false);
+        c.setBearingRequired(false);
+        c.setSpeedRequired(false);
+        c.setCostAllowed(true);
+        c.setPowerRequirement(Criteria.POWER_HIGH);
+        return c;
 
     }
     protected void onActivityResult(int reqCode, int resultCode, Intent data) {
@@ -233,13 +225,11 @@ public class Landing extends AppCompatActivity implements LocationListener {
         } catch (Exception e) {
 
         }
-        mBlueAdapter = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
-        BluetoothDevice bluetoothDevice = mBlueAdapter.getRemoteDevice(address);//connects to the device's address and checks if it's available
-        btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
-//        btSocket = Globals.bluetoothDevice.createRfcommSocketToServiceRecord(myUUID);
+        mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothDevice bluetoothDevice = mBlueAdapter.getRemoteDevice(address);
+        btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);
         btSocket.connect();
         if (btSocket.isConnected()) {
-//            System.out.println("deviceAddress = " + deviceAddress);
             try {
                 outputStream = btSocket.getOutputStream();
             } catch (IOException e) {
@@ -254,7 +244,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
 
         try {
             deviceName.setText(name);
-//            deviceAddress.setText(address);
         } catch (Exception e) {
             btSocket.close();
         }
@@ -278,7 +267,10 @@ public class Landing extends AppCompatActivity implements LocationListener {
                         stringBuilder.append(line);
                         sensorValue = stringBuilder.toString();
                         final int sValue = Integer.valueOf(sensorValue);
+                        System.out.println("*****************************************************************************************************************************************************************************************");
                         System.out.println("The output is:" + sensorValue);
+                        System.out.println("*****************************************************************************************************************************************************************************************");
+
                         handler.post(new Runnable() {
                             public void run() {
                                 senseValue.setText(sensorValue);
@@ -340,7 +332,10 @@ public class Landing extends AppCompatActivity implements LocationListener {
     public void onLocationChanged(Location location) {
         longitude = String.valueOf(location.getLongitude());
         latitude = String.valueOf(location.getLatitude());
-        currentLocation.setText("Latitude: "+latitude+"Longitude: "+longitude);
+//        System.out.println("*****************************************************************************************************************************************************************************************");
+//        System.out.println("Latitude: "+latitude+"Longitude: "+longitude);
+//        System.out.println("*****************************************************************************************************************************************************************************************");
+
     }
 
     @Override
@@ -382,7 +377,7 @@ class DatabaseHelper extends SQLiteOpenHelper{
         onCreate(db);
     }
     public boolean addData(String name,String number){
-        String updateTable = "UPDATE "+TABLE_NAME+" SET "+COL1+" = '"+name+"', "+COL2+" = "+number +" WHERE ID=1";
+        String updateTable = "UPDATE "+TABLE_NAME+" SET "+COL1+" = '"+name+"', "+COL2+" = '"+number +"' WHERE ID=1";
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL(updateTable);
         return true;
