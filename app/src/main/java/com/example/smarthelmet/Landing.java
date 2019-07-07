@@ -57,8 +57,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
 
     String address = null, name = null;
 
-    ProgressDialog progressDialog;
-
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     private final int PICK_CONTACT = 1;
@@ -78,7 +76,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
     String namee, numberrr;
 
     Button connectBtn, btnSOS, onOffBtn;
-    TextView deviceName, deviceAddress, sosName, sosNumber, senseValue,currentLocation;
+    TextView deviceName, sosName, sosNumber, senseValue,currentLocation;
     Switch bluetoothSwitch;
 
     BluetoothAdapter mBlueAdapter;
@@ -90,8 +88,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_landing);
-
-        progressDialog = new ProgressDialog(Landing.this);
 
         btnSOS = (Button) findViewById(R.id.btnSOS);
         connectBtn = (Button) findViewById(R.id.connectBtn);
@@ -127,7 +123,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
         Criteria criteria = new Criteria();
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         provider = locationManager.getBestProvider(criteria, true);
-        locationManager.requestLocationUpdates(provider, 0, 0,this);
+        locationManager.requestLocationUpdates(provider, 1000, 0,this);
 
 
         bluetoothSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -143,6 +139,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
                     mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
                     mBlueAdapter.disable();
                     deviceName.setText("Waiting...");
+//                    deviceAddress.setText("Waiting...");
                 }
             }
         });
@@ -167,6 +164,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
                     try {
                         bluetoothConnect();
                         beginListenForData();
+
                     } catch (Exception e) {
 
                     }
@@ -232,7 +230,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
                 }
             }
 
-        } catch (Exception we) {
+        } catch (Exception e) {
 
         }
         mBlueAdapter = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
@@ -241,6 +239,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
 //        btSocket = Globals.bluetoothDevice.createRfcommSocketToServiceRecord(myUUID);
         btSocket.connect();
         if (btSocket.isConnected()) {
+//            System.out.println("deviceAddress = " + deviceAddress);
             try {
                 outputStream = btSocket.getOutputStream();
             } catch (IOException e) {
@@ -255,7 +254,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
 
         try {
             deviceName.setText(name);
-            deviceAddress.setText(address);
+//            deviceAddress.setText(address);
         } catch (Exception e) {
             btSocket.close();
         }
@@ -265,6 +264,8 @@ public class Landing extends AppCompatActivity implements LocationListener {
         final Handler handler = new Handler();
         stopThread = false;
         buffer = new byte[2048];
+
+        System.out.println("buffer = " + buffer[1]);
         Thread thread = new Thread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             public void run() {
