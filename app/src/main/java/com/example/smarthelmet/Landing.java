@@ -35,6 +35,8 @@ import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
@@ -73,6 +75,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
     byte buffer[];
     String sensorValue;
     String provider;
+    String dName ="Smart Helmet",dAddress="00:18:E4:40:00:06";
     String longitude, latitude;
     String namee, numberrr;
 
@@ -87,7 +90,8 @@ public class Landing extends AppCompatActivity implements LocationListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_landing);
 
         btnSOS = (Button) findViewById(R.id.btnSOS);
@@ -195,56 +199,55 @@ public class Landing extends AppCompatActivity implements LocationListener {
                     sosName.setText(name);
                     sosNumber.setText(number);
                 }
-                boolean insertData =databaseHelper.addData(name,number);
-                if (insertData){
-                    Toast.makeText(Landing.this,"Successfully added to the database.",Toast.LENGTH_LONG);
-                }
-                else {
-                    Toast.makeText(Landing.this,"Unsuccessful.",Toast.LENGTH_LONG);
-
-                }
+                databaseHelper.addData(name,number);
             }
         }
     }
 
     protected void bluetoothConnect() throws IOException {
 
+        mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
         try {
-            mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
-            address = mBlueAdapter.getAddress();
             pairedDevices = mBlueAdapter.getBondedDevices();
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice bt : pairedDevices) {
                     address = bt.getAddress();
                     name = bt.getName();
+                    if(dName.equals(name) && dAddress.equals(address)){
+                        BluetoothDevice bluetoothDevice = mBlueAdapter.getRemoteDevice(address);
+                        btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);
+                        btSocket.connect();
+                        if (btSocket.isConnected()) {
+                            try {
+                                outputStream = btSocket.getOutputStream();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                inputStream = btSocket.getInputStream();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        try {
+                            deviceName.setText(name);
+                        }
+                        catch (Exception e) {
+                            btSocket.close();
+                            e.printStackTrace();
+                        }
+                    }
+                    else{
+                        Toast.makeText(Landing.this, "Please Pair to 'Smart Helmet'.", Toast.LENGTH_LONG).show();
+                    }
 
                 }
             }
 
-        } catch (Exception e) {
-
         }
-        mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
-        BluetoothDevice bluetoothDevice = mBlueAdapter.getRemoteDevice(address);
-        btSocket = bluetoothDevice.createInsecureRfcommSocketToServiceRecord(myUUID);
-        btSocket.connect();
-        if (btSocket.isConnected()) {
-            try {
-                outputStream = btSocket.getOutputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                inputStream = btSocket.getInputStream();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            deviceName.setText(name);
-        } catch (Exception e) {
-            btSocket.close();
+        catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -330,9 +333,9 @@ public class Landing extends AppCompatActivity implements LocationListener {
     public void onLocationChanged(Location location) {
         longitude = String.valueOf(location.getLongitude());
         latitude = String.valueOf(location.getLatitude());
-//        System.out.println("*****************************************************************************************************************************************************************************************");
-//        System.out.println("Latitude: "+latitude+"Longitude: "+longitude);
-//        System.out.println("*****************************************************************************************************************************************************************************************");
+        System.out.println("*****************************************************************************************************************************************************************************************");
+        System.out.println("Latitude: "+latitude+"Longitude: "+longitude);
+        System.out.println("*****************************************************************************************************************************************************************************************");
 
     }
 
