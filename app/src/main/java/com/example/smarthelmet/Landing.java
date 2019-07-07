@@ -77,7 +77,7 @@ public class Landing extends AppCompatActivity implements LocationListener {
     String namee, numberrr;
 
     Button connectBtn, btnSOS;
-    TextView deviceName, sosName, sosNumber, senseValue;
+    TextView deviceName, sosName, sosNumber;
     Switch bluetoothSwitch;
 
     BluetoothAdapter mBlueAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -95,7 +95,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
         deviceName = (TextView) findViewById(R.id.deviceName);
         sosName = (TextView) findViewById(R.id.sosName);
         sosNumber = (TextView) findViewById(R.id.sosNumber);
-        senseValue = (TextView) findViewById(R.id.senseValue);
         bluetoothSwitch =(Switch) findViewById(R.id.bluetoothSwitch);
 
         Intent intent = new Intent(this,smartService.class);
@@ -273,7 +272,6 @@ public class Landing extends AppCompatActivity implements LocationListener {
 
                         handler.post(new Runnable() {
                             public void run() {
-                                senseValue.setText(sensorValue);
                                 if (sValue >= 30000) {
                                     int permissionCheck = ContextCompat.checkSelfPermission(Landing.this, Manifest.permission.SEND_SMS);
                                     if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
