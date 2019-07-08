@@ -164,10 +164,12 @@ public class Landing extends AppCompatActivity implements LocationListener {
                 else{
                     try {
                         bluetoothConnect();
-                        beginListenForData();
+                        if(btSocket.isConnected()){
+                            beginListenForData();
+                        }
 
                     } catch (Exception e) {
-
+                        Toast.makeText(Landing.this, "Cannot connect at the moment.", Toast.LENGTH_LONG).show();
                     }
                 }
             }
@@ -247,6 +249,8 @@ public class Landing extends AppCompatActivity implements LocationListener {
         }
         catch (Exception e) {
             e.printStackTrace();
+            Toast.makeText(Landing.this, "Smart Helmet not discovered.", Toast.LENGTH_LONG).show();
+
         }
     }
 
